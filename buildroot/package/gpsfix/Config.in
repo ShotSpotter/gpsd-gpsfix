@@ -1,0 +1,8 @@
+config BR2_PACKAGE_GPSFIX
+    bool "gpsfix"
+    depends on BR2_INSTALL_LIBSTDCPP
+    select BR2_PACKAGE_GPSD
+    select BR2_PACKAGE_CLI11
+    help
+      Tool to read GPS data from GPSD
+
