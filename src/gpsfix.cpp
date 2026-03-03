@@ -46,12 +46,12 @@ int main(int argc, char* argv[]) {
 	gps_data_t* data = gps_rec.stream(WATCH_ENABLE | WATCH_JSON);
 
 	if (data == nullptr) {
-		std::cerr << "Error: Failed to connect to gpsd at " << host << ":" << port << std::endl;
+		std::cerr << std::format("Error: Failed to connect to gpsd at {}:{}", host, port) << std::endl;
 		return 1;
 	}
 
 	if (!quiet) {
-		std::cerr << "Connected to gpsd at " << host << ":" << port << std::endl;
+		std::cerr << std::format("Connected to gpsd at {}:{}", host, port) << std::endl;
 	}
 
 	// Try to read device information
@@ -62,18 +62,19 @@ int main(int argc, char* argv[]) {
 			if (data != nullptr && data->devices.ndevices >= 1) {
 				if (!quiet) {
 					auto& dev = data->devices.list[0];
-					std::cerr << "Found GPS device: " << dev.path;
+					std::string driverInfo;
 					if (dev.driver[0] != '\0') {
-						std::cerr << " (" << dev.driver;
+						driverInfo = std::format(" ({}", dev.driver);
 						if (dev.subtype[0] != '\0') {
-							std::cerr << ", " << dev.subtype;
+							driverInfo += std::format(", {}", dev.subtype);
 						}
-						std::cerr << ")";
+						driverInfo += ")";
 					}
+					std::string baudInfo;
 					if (dev.baudrate > 0) {
-						std::cerr << " @ " << dev.baudrate << dev.parity << dev.stopbits;
+						baudInfo = std::format(" @ {}{}{}", dev.baudrate, dev.parity, dev.stopbits);
 					}
-					std::cerr << std::endl;
+					std::cerr << std::format("Found GPS device: {}{}{}", dev.path, driverInfo, baudInfo) << std::endl;
 				}
 				deviceFound = true;
 			}
@@ -83,11 +84,11 @@ int main(int argc, char* argv[]) {
 	}
 
 	if (!deviceFound && !quiet) {
-		std::cerr << "Note: GPS device list not populated yet (gpsd may still be working)" << std::endl;
+		std::cerr << std::format("Note: GPS device list not populated yet (gpsd may still be working)") << std::endl;
 	}
 
 	if (!jsonOutput) {
-		std::cout << std::format("{:>20} {:>6} {:>4} {:>12} {:>12} {:>10} {:>10} {:>8} {:>6} {:>5}\n",
+		std::cout << std::format("{:>20} {:>6} {:>4} {:>12} {:>12} {:>10} {:>10} {:>8} {:>6}{:>8}\n",
 			"Timestamp", "Count", "Mode", "Latitude", "Longitude", "HAE (m)", "MSL (m)", "PDOP", "SVs", "Fix");
 		std::cout << std::string(104, '-') << std::endl;
 	}
@@ -104,7 +105,7 @@ int main(int argc, char* argv[]) {
 		// Check for timeout if no data received
 		time_t now = time(nullptr);
 		if (now - lastDataTime > NO_DATA_TIMEOUT_SECONDS) {
-			std::cerr << "Error: No data received from gpsd for " << NO_DATA_TIMEOUT_SECONDS << " seconds" << std::endl;
+			std::cerr << std::format("Error: No data received from gpsd for {} seconds", NO_DATA_TIMEOUT_SECONDS) << std::endl;
 			return 1;
 		}
 
@@ -175,7 +176,7 @@ int main(int argc, char* argv[]) {
 						std::cout << std::format("{{\"timestamp\":\"{}\",\"count\":{},\"mode\":{},\"lat\":{:.7f},\"lon\":{:.7f},\"hae\":{:.2f},\"msl\":{:.2f},\"pdop\":{:.3f},\"svs\":{},\"fix\":\"{}\"}}\n",
 							timeStr, readCount, mode, lat, lon, hae, msl, pdop, svs, fixStatus);
 					} else {
-						std::cout << std::format("{:>20} {:6d} {:4d} {:12.7f} {:12.7f} {:10.2f} {:10.2f} {:8.3f} {:6d}  {}\n",
+						std::cout << std::format("{:>20} {:6d} {:4d} {:12.7f} {:12.7f} {:10.2f} {:10.2f} {:8.3f} {:6d}{:>8}\n",
 							timeStr, readCount, mode, lat, lon, hae, msl, pdop, svs, fixStatus);
 					}
 					std::cout.flush();
@@ -185,10 +186,6 @@ int main(int argc, char* argv[]) {
 			// No data available, sleep to avoid tight loop
 			usleep(WAIT_TIME_MICROSECONDS);
 		}
-	}
-
-	if (!jsonOutput) {
-		std::cout << "\nCompleted " << readCount << " reading(s)" << std::endl;
 	}
 	return 0;
 }
