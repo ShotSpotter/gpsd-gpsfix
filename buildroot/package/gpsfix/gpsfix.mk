@@ -6,7 +6,7 @@
 #
 ################################
 
-GPSFIX_VERSION = 1.0.1
+GPSFIX_VERSION = 1.0.2
 GPSFIX_SITE = $(call github,ShotSpotter,gpsfix,$(GPSFIX_VERSION))
 GPSFIX_DEPENDENCIES = gpsd cli11
 GPSFIX_LICENSE = MIT
